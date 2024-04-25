@@ -1,13 +1,18 @@
 # Testing feature detection of a single image
 # Uses OpenCV Feature Detection Tutorial
 # https://docs.opencv.org/4.x/d7/d66/tutorial_feature_detection.html
-# This sucked ^ its outdated
 
 # Packages
 import cv2 as cv
 import numpy as np
+import os
 
-path = 'C:\\Users\\Andrew\\OneDrive - The University of Auckland\\Desktop\\Uni Coursebooks\\Year 4\\709\\Computer-vision-project\\image_datasets\\Set 1\\image0001.jpg'
+# Construct the file path dynamically
+current_dir = os.path.dirname(os.path.abspath(__file__))
+image_folder = "image_datasets\\Set 1"
+image_name = "image0001.jpg"
+path = os.path.join(current_dir, image_folder, image_name)
+
 img = cv.imread(path, cv.IMREAD_GRAYSCALE)
 if img is None:
     print("bruh theres no image")
@@ -28,5 +33,3 @@ cv.imshow('ORB Keypoints', img_keypoints)
 
 cv.waitKey(0)
 cv.destroyAllWindows()
-
-#code works kinda, it does indeed find a very smol feature
