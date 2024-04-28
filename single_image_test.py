@@ -10,7 +10,7 @@ import os
 # Construct the file path dynamically
 current_dir = os.path.dirname(os.path.abspath(__file__))
 image_folder = "image_datasets\\Set 1"
-image_name = "image0001.jpg"
+image_name = "image0003.jpg"
 path = os.path.join(current_dir, image_folder, image_name)
 
 img = cv.imread(path, cv.IMREAD_GRAYSCALE)
