@@ -8,7 +8,7 @@ import numpy as np
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 1/')
+inputPar = os.path.join(path, 'image_datasets/Set 3/')
 outPar = os.path.join(path, 'output_images/')
 
 os.makedirs(outPar, exist_ok=True)
@@ -21,6 +21,23 @@ for file in files:
     fitem = os.path.join(inputPar, file)
     
     img = cv2.imread(fitem)
+
+    y=600
+    x=0
+    h=1300
+    w=4000
+    img_corped = img[x:w, y:h]
+
+    img = img_corped
+
+    # cv2.imshow('something', img_corped)
+
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    # break
+
+
     # Convert the img to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
