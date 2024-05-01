@@ -8,13 +8,15 @@ import numpy as np
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 2/')
+inputPar = os.path.join(path, 'image_datasets/Set 3/')
 outPar = os.path.join(path, 'output_images/')
 
 os.makedirs(outPar, exist_ok=True)
 
 # List all files in the input directory
 files = os.listdir(inputPar)
+
+files = [files[0]]
 
 # Loop through each file in the input directory
 for file in files:
@@ -43,14 +45,18 @@ for file in files:
     # Kernal used to filter image
     kernel = np.array([
         [-0.5, 0, 0.5],
-        [-1, 0, 1],
         [-2, 0, 2],
-        [-1, 0, 1],
+        [-4, 0, 4],
+        [-2, 0, 2],
         [-0.5, 0, 0.5]
     ])
+    # Apply gaussian blur
+    # blurred = cv2.equalizeHist(gray) 
+    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
 
-    image_filtered = cv2.filter2D(img, -1, kernel)
-    ret, image_filtered = cv2.threshold(image_filtered, 140, 255, cv2.THRESH_BINARY)
+    image_filtered = cv2.filter2D(blurred, -1, kernel)
+
+    ret, image_filtered = cv2.threshold(image_filtered, 80, 255, cv2.THRESH_BINARY)
  
     # Apply edge detection method on the image
     edges = cv2.Canny(image_filtered, 50, 150, apertureSize=3)
@@ -92,8 +98,10 @@ for file in files:
     
     img = cv2.imread(fitem)
 
-    cv2.imshow('test', img)
+    print_image = np.concatenate((edges, image_filtered, gray, blurred), axis = 1)
+    print_image = cv2.resize(print_image, (1400, 540), interpolation = cv2.INTER_AREA)
+    cv2.imshow('test', print_image)
+    cv2.waitKey(0)
 
-    cv2.waitKey(100)
     cv2.destroyAllWindows()
     os.remove(fitem)
