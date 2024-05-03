@@ -3,6 +3,7 @@
 import cv2
 import os
 import numpy as np
+import csv
 
 # Get the current working directory
 path = os.getcwd()
@@ -15,8 +16,9 @@ os.makedirs(outPar, exist_ok=True)
 
 # List all files in the input directory
 files = os.listdir(inputPar)
-
 files = [files[0]]
+
+weld_positions = []
 
 for file in files:
     fitem = os.path.join(inputPar, file)
@@ -106,11 +108,34 @@ for file in files:
         
         return main_image, weld_positions
     
+    def save_image(file_name, image, interim_no):
+        # Saves image with filename format requested
+        # If final image is desired, set interim_no to 0
+        name_end = file.find(".")
+        image_title = file_name[0:name_end]
+        if interim_no == 0:
+            output_name = f'{image_title.capitalize()}_A_WeldGapPosition.jpg'
+        else:
+            output_name = f'{image_title.capitalize()}_B_InterimResult{interim_no}.JPG '
+        # Define the output file path
+        fout = os.path.join(outPar, output_name)
+        # Save the grayscale image with detected edges
+        cv2.imwrite(fout, image)
+
     weld_image, weld_indices = find_weld_gap(70, img, img)
+
+    #Add image, final index and validity of answer to array
+    weld_positions.append([file, 500, 1])
 
     print_image = cv2.resize(img, (1400, 540), interpolation = cv2.INTER_AREA)
     cv2.imshow('test', print_image)
     cv2.waitKey(0)
+    
+#Output all results to csv file
+with open('WeldGapPositions.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(['Image name', 'Weld Gap Position', 'Weld Gap Valid'])
+        writer.writerows(weld_positions)
 
 
 
