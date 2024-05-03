@@ -8,7 +8,7 @@ import numpy as np
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 3/')
+inputPar = os.path.join(path, 'image_datasets/Set 1/')
 outPar = os.path.join(path, 'output_images/')
 
 os.makedirs(outPar, exist_ok=True)
@@ -16,7 +16,7 @@ os.makedirs(outPar, exist_ok=True)
 # List all files in the input directory
 files = os.listdir(inputPar)
 
-# files = [files[0]]
+files = [files[0]]
 
 for file in files:
     fitem = os.path.join(inputPar, file)
@@ -25,10 +25,18 @@ for file in files:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Kernal used to filter image
+    # kernel = np.array([
+    #     [0, -1, 0],
+    #     [-1, 5, -1],
+    #     [0, -1, 0]
+    # ])
+
     kernel = np.array([
-        [0, -1, 0],
-        [-1, 6, -1],
-        [0, -1, 0]
+        [-0.5, 0, 0.5],
+        [-2, 0, 2],
+        [-4, 0, 4],
+        [-2, 0, 2],
+        [-0.5, 0, 0.5]
     ])
 
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -47,8 +55,8 @@ for file in files:
     # image_filtered = cv2.Canny(kernel_image, 50, 150, apertureSize=3)
     # exp_image = np.power(gray / 255.0, 5) * 255.0
 
-    upper_limit = 200
-    lower_limit = 110
+    upper_limit = 255
+    lower_limit = 80
 
     ret, thresh1 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_BINARY)
     ret, thresh2 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_BINARY_INV)
@@ -59,10 +67,10 @@ for file in files:
     thresh = np.concatenate((blurred, image_filtered, thresh1, thresh2, thresh3, thresh4, thresh5), axis=1)
     thresh = cv2.resize(thresh, (1400, 540), interpolation = cv2.INTER_AREA)
 
-    # cv2.imshow('Binary, Binary Inverted, Truncated, Zero, Zero Inverted Threshold', thresh)
+    # cv2.imshow('Thresholded images', thresh)
     # cv2.waitKey(0)
 
-    edges = thresh2
+    edges = thresh1
 
     # This returns an array of r and theta values
     lines_list =[]
@@ -85,8 +93,25 @@ for file in files:
         # Maintain a simples lookup list for points
         lines_list.append([(x1,y1),(x2,y2)])
 
+    def find_weld_gap(height_index, line_image, main_image):
+        weld_line = line_image[height_index, :]
+        weld_positions = []
+        for index in range(len(weld_line) - 1):
+            if list(weld_line[index]) == [0,255,0]:
+                weld_positions.append(index)
+        
+        cv2.line(main_image, (0, 70), (len(weld_line) - 1, 70), (255,0,0),5)
+        if len(weld_positions) != 0:
+            cv2.line(main_image, (min(weld_positions), 70), (max(weld_positions), 70), (0,0,255),10)
+        
+        return main_image, weld_positions
+    
+    weld_image, weld_indices = find_weld_gap(70, img, img)
+
     print_image = cv2.resize(img, (1400, 540), interpolation = cv2.INTER_AREA)
     cv2.imshow('test', print_image)
     cv2.waitKey(0)
+
+
 
 
