@@ -7,7 +7,7 @@ import csv
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 3/')
+inputPar = os.path.join(path, 'image_datasets/Set 2/')
 outPar = os.path.join(path, 'output_images/')
 
 os.makedirs(outPar, exist_ok=True)
@@ -25,32 +25,58 @@ for file in files:
 
     img = cv2.imread(fitem)
 
+    width, height = img.shape[1::-1]
+
+    img = img[0:400, 0:width]
+
+
     # Convert the img to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # Kernal used to filter image
     kernel = np.array([
-        [-0.5, 0, 0.5],
         [-1, 0, 1],
-        [-2, 0, 2],
-        [-1, 0, 1],
-        [-0.5, 0, 0.5]
+        [-1.5, 0, 1.5],
+        [-1, 0, 1]
     ])
 
-    l = 10
+    kernel = np.array([
+        [-1, 1, 1],
+        [-1, -1, 1],
+        [-1, -1, 1]
+    ])
 
-    # kernel = np.array([
-    #     [-l, l, l],
-    #     [-l, -l, l],
-    #     [-l, -l, l]
-    # ])
+    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
+    kernel_image = cv2.filter2D(blurred, -1, kernel)
+    image_filtered = kernel_image
 
-    image_filtered = cv2.filter2D(img, -1, kernel)
+    # #Log filtering of image
+    # c = 255 / np.log(1 + np.max(kernel_image)) 
+    # log_image = c * (np.log(kernel_image + 1))
+    # log_image[np.isneginf(log_image)] = 255
+    # log_image = np.uint8(log_image)
 
-    ret, image_filtered = cv2.threshold(image_filtered, 80, 255, cv2.THRESH_BINARY)
- 
-    # Apply edge detection method on the image
-    edges = cv2.Canny(image_filtered, 50, 150, apertureSize=3)
+    # image_filtered = log_image
+    # image_filtered = cv2.equalizeHist(log_image)
+    # image_filtered = cv2.Sobel(kernel_image, cv2.CV_64F,0,1,ksize=3) 
+    # image_filtered = cv2.Canny(kernel_image, 50, 150, apertureSize=3)
+    # exp_image = np.power(gray / 255.0, 5) * 255.0
+
+    upper_limit = 255
+    lower_limit = 80
+
+    ret, thresh1 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_BINARY)
+    ret, thresh2 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_BINARY_INV)
+    ret, thresh3 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_TRUNC)
+    ret, thresh4 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_TOZERO)
+    ret, thresh5 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_TOZERO_INV)
+
+    thresh = np.concatenate((blurred, image_filtered, thresh1, thresh2, thresh3, thresh4, thresh5), axis=1)
+    thresh = cv2.resize(thresh, (1400, 540), interpolation = cv2.INTER_AREA)
+
+    # cv2.imshow('Thresholded images', thresh)
+    # cv2.waitKey(0)
+
+    edges = thresh1
  
     # This returns an array of r and theta values
     lines_list =[]
@@ -132,7 +158,7 @@ for file in files:
     img = cv2.imread(fitem)
 
     cv2.imshow('test', img)
-    cv2.waitKey(0)
+    cv2.waitKey(100)
     cv2.destroyAllWindows()
     os.remove(fitem)
 

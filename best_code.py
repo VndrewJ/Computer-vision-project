@@ -9,7 +9,7 @@ import csv
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 3/')
+inputPar = os.path.join(path, 'image_datasets/Set 1/')
 outPar = os.path.join(path, 'output_images/')
 
 os.makedirs(outPar, exist_ok=True)
