@@ -9,7 +9,7 @@ import csv
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 1/')
+inputPar = os.path.join(path, 'image_datasets/Set 3/')
 outPar = os.path.join(path, 'output_images/')
 
 os.makedirs(outPar, exist_ok=True)
@@ -34,14 +34,12 @@ for file in files:
     # ])
 
     kernel = np.array([
-        [-0.5, 0, 0.5],
-        [-2, 0, 2],
-        [-4, 0, 4],
-        [-2, 0, 2],
-        [-0.5, 0, 0.5]
+        [-1, 0, 1],
+        [-1.5, 0, 1.5],
+        [-1, 0, 1]
     ])
 
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
     kernel_image = cv2.filter2D(blurred, -1, kernel)
     image_filtered = kernel_image
 
