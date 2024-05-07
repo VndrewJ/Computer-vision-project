@@ -7,7 +7,7 @@ import csv
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 2/')
+inputPar = os.path.join(path, 'image_datasets/Set 3/')
 outPar = os.path.join(path, 'output_images/')
 
 os.makedirs(outPar, exist_ok=True)
@@ -27,7 +27,7 @@ for file in files:
 
     width, height = img.shape[1::-1]
 
-    img = img[0:400, 0:width]
+    # img = img[0:400, 0:width]
 
 
     # Convert the img to grayscale
@@ -39,27 +39,26 @@ for file in files:
         [-1, 0, 1]
     ])
 
-    kernel = np.array([
-        [-1, 1, 1],
-        [-1, -1, 1],
-        [-1, -1, 1]
-    ])
-
     blurred = cv2.GaussianBlur(gray, (7, 7), 0)
     kernel_image = cv2.filter2D(blurred, -1, kernel)
-    image_filtered = kernel_image
 
-    # #Log filtering of image
-    # c = 255 / np.log(1 + np.max(kernel_image)) 
-    # log_image = c * (np.log(kernel_image + 1))
-    # log_image[np.isneginf(log_image)] = 255
-    # log_image = np.uint8(log_image)
+    cv2.imshow('test', kernel_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    # image_filtered = log_image
-    # image_filtered = cv2.equalizeHist(log_image)
-    # image_filtered = cv2.Sobel(kernel_image, cv2.CV_64F,0,1,ksize=3) 
-    # image_filtered = cv2.Canny(kernel_image, 50, 150, apertureSize=3)
-    # exp_image = np.power(gray / 255.0, 5) * 255.0
+    l = 1
+
+    kernel = np.array([
+        [-l, l, l],
+        [-l, -l, l],
+        [-l, -l, l]
+    ])
+
+    image_filtered = cv2.filter2D(kernel_image, -1, kernel)
+
+    cv2.imshow('test', image_filtered)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     upper_limit = 255
     lower_limit = 80
@@ -140,6 +139,8 @@ for file in files:
 
     i = i + 1
 
+    break
+
 
 
 
@@ -158,7 +159,7 @@ for file in files:
     img = cv2.imread(fitem)
 
     cv2.imshow('test', img)
-    cv2.waitKey(100)
+    cv2.waitKey(0)
     cv2.destroyAllWindows()
     os.remove(fitem)
 
