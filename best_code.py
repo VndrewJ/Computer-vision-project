@@ -21,8 +21,9 @@ def find_weld_gap(height_index, line_image, main_image):
     
     return main_image, weld_positions
 
-def save_image(file_name, image, interim_no):
+def save_image(file_name, image, interim_no, gap_position):
     # Saves image with filename format requested
+    output_image = crop_image(image, gap_position)
     # If final image is desired, set interim_no to 0
     name_end = file.find(".")
     image_title = file_name[0:name_end]
@@ -32,8 +33,8 @@ def save_image(file_name, image, interim_no):
         output_name = f'{image_title.capitalize()}_B_InterimResult{interim_no}.JPG '
     # Define the output file path
     fout = os.path.join(outPar, output_name)
-    # Save the grayscale image with detected edges
-    cv2.imwrite(fout, image)
+    # Save the image with detected edges
+    cv2.imwrite(fout, output_image)
 
 def check_validity(weld_indices, last_gap_position):
     try:
@@ -51,6 +52,19 @@ def check_validity(weld_indices, last_gap_position):
         # No weld indices exist
         return -1, 0
 
+def crop_image(image, gap_position):
+    crop_width = 600
+    crop_height = 400
+
+    # If gap_position = 0, do not crop width-wise
+    cols = np.array(image.shape[1])
+    if gap_position ==0:
+        return image[0:crop_height, 0:cols]
+    # otherwise crop image so gap is in the center 
+    else:
+        left_index = gap_position-crop_width if gap_position >= crop_width else 0
+        right_index = gap_position+crop_width if gap_position <= cols - crop_width else cols
+        return image[0:crop_height, left_index:right_index]
 
 # Main code start
 
@@ -58,13 +72,14 @@ def check_validity(weld_indices, last_gap_position):
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 3/')
+inputPar = os.path.join(path, 'image_datasets/Set 1/')
 outPar = os.path.join(path, 'output_images/')
 
 os.makedirs(outPar, exist_ok=True)
 
 # List all files in the input directory
 files = os.listdir(inputPar)
+files = [files[0]]
 
 #Initialise weld positions array and last logged weld position
 last_gap_position = 0
@@ -128,6 +143,10 @@ for file in files:
 
     print_image = cv2.resize(img, (1400, 540), interpolation = cv2.INTER_AREA)
 
+    # Saves requested images
+    save_image(file, img, 0, last_gap_position)
+    save_image(file, kernel_image, 1, last_gap_position)
+    save_image(file, thresh1, 2, last_gap_position)
     # Shows image if uncommented
     cv2.imshow('test', print_image)
     cv2.waitKey(0)
