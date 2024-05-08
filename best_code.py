@@ -72,14 +72,14 @@ def crop_image(image, gap_position):
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 1/')
+inputPar = os.path.join(path, 'image_datasets/Set 3/')
 outPar = os.path.join(path, 'output_images/')
 
 os.makedirs(outPar, exist_ok=True)
 
 # List all files in the input directory
 files = os.listdir(inputPar)
-files = [files[0]]
+# files = [files[0]]
 
 #Initialise weld positions array and last logged weld position
 last_gap_position = 0
@@ -92,17 +92,17 @@ for file in files:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     kernel = np.array([
-        [-1, 0, 1],
+        [-0.8, 0, 0.8],
         [-1.5, 0, 1.5],
-        [-1, 0, 1]
+        [-0.8, 0, 0.8]
     ])
 
-    blurred = cv2.GaussianBlur(gray, (7, 7), 0)
+    blurred = cv2.GaussianBlur(gray, (7, 7), 2)
     kernel_image = cv2.filter2D(blurred, -1, kernel)
     image_filtered = kernel_image
 
     upper_limit = 255
-    lower_limit = 80
+    lower_limit = 70
 
     ret, thresh1 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_BINARY)
     edges = thresh1

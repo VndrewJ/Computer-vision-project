@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+#weld gap positions
+WeldGapPositions.csv
+
 # Distribution / packaging
 .Python
 build/
