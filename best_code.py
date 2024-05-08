@@ -4,19 +4,21 @@ import cv2
 import os
 import numpy as np
 import csv
+import math
 
 # Get the current working directory
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 1/')
+inputPar = os.path.join(path, 'image_datasets/Set 3/')
 outPar = os.path.join(path, 'output_images/')
 
 os.makedirs(outPar, exist_ok=True)
 
 # List all files in the input directory
 files = os.listdir(inputPar)
-files = [files[0]]
+# files = [files[0]]
+last_gap_position = 0
 
 weld_positions = []
 
@@ -56,7 +58,7 @@ for file in files:
     # exp_image = np.power(gray / 255.0, 5) * 255.0
 
     upper_limit = 255
-    lower_limit = 80
+    lower_limit = 255
 
     ret, thresh1 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_BINARY)
     ret, thresh2 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_BINARY_INV)
@@ -74,6 +76,7 @@ for file in files:
 
     # This returns an array of r and theta values
     lines_list =[]
+
     lines = cv2.HoughLinesP(
             edges, # Input edge image
             1, # Distance resolution in pixels
@@ -84,14 +87,18 @@ for file in files:
             )
  
     # Iterate over points
-    for points in lines:
-        # Extracted points nested in the list
-        x1,y1,x2,y2=points[0]
-        # Draw the lines joing the points
-        # On the original image
-        cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
-        # Maintain a simples lookup list for points
-        lines_list.append([(x1,y1),(x2,y2)])
+    try:
+        for points in lines:
+            # Extracted points nested in the list
+            x1,y1,x2,y2=points[0]
+            # Draw the lines joing the points
+            # On the original image
+            cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
+            # Maintain a simples lookup list for points
+            lines_list.append([(x1,y1),(x2,y2)])
+    except TypeError:
+        # No lines exist
+        continue
 
     def find_weld_gap(height_index, line_image, main_image):
         weld_line = line_image[height_index, :]
@@ -120,10 +127,30 @@ for file in files:
         # Save the grayscale image with detected edges
         cv2.imwrite(fout, image)
 
+    def check_validity(weld_indices, last_gap_position):
+        try:
+            # check the distance of the weld indices
+            width = max(weld_indices)- min(weld_indices)
+            location = math.floor(width/2) + min(weld_indices)
+            if (width <11 and len(weld_indices) >=3 and ((last_gap_position == 0) or abs(last_gap_position-location)<22)):
+                # Check width is within tolerance and that hasnt moved more that 1mm from the last image
+                # Also check that there is at least 3 measurements for the weld line
+                last_gap_position = location
+                return location, 1
+            else:
+                return -1, 0
+        except ValueError:
+            # No weld indices exist
+            return -1, 0
+
     weld_image, weld_indices = find_weld_gap(70, img, img)
+    weld_location, weld_valid = check_validity(weld_indices, last_gap_position)
+    if weld_location != -1:
+        # Updates position of last gap if the last location was valid
+        last_gap_position = weld_location
 
     #Add image, final index and validity of answer to array
-    weld_positions.append([file, 500, 1])
+    weld_positions.append([file, weld_location, weld_valid])
 
     print_image = cv2.resize(img, (1400, 540), interpolation = cv2.INTER_AREA)
     cv2.imshow('test', print_image)
