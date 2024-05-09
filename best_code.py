@@ -78,7 +78,6 @@ outPar = os.path.join(path, 'InterimResults')
 os.makedirs(outPar, exist_ok=True)
 
 #Initialise weld positions array and last logged weld position
-last_gap_position = 0
 weld_positions = []
 
 #iterate through each set
@@ -87,6 +86,9 @@ for subdir in os.listdir(input_dir):
 
     # List all files in the input directory
     files = os.listdir(inputPar)
+
+    # Reset last gap position between sets
+    last_gap_position = 0
 
     #iterate through each image in a set
     for file in files:
