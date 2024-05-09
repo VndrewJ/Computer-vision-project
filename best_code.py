@@ -66,89 +66,98 @@ def crop_image(image, gap_position):
         right_index = gap_position+crop_width if gap_position <= cols - crop_width else cols
         return image[0:crop_height, left_index:right_index]
 
-# Main code start
+#******************Main code start********************#
 
 # Get the current working directory
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 1/')
-outPar = os.path.join(path, 'InterimResults/')
+input_dir = os.path.join(path, 'image_datasets')
+outPar = os.path.join(path, 'InterimResults')
 
 os.makedirs(outPar, exist_ok=True)
-
-# List all files in the input directory
-files = os.listdir(inputPar)
-# files = [files[0]]
 
 #Initialise weld positions array and last logged weld position
 last_gap_position = 0
 weld_positions = []
 
+#iterate through each set
+for subdir in os.listdir(input_dir):
+    inputPar = os.path.join(input_dir, subdir)
 
-for file in files:
-    fitem = os.path.join(inputPar, file)
-    img = cv2.imread(fitem)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # List all files in the input directory
+    files = os.listdir(inputPar)
 
-    kernel = np.array([
-        [-0.8, 0, 0.8],
-        [-1.5, 0, 1.5],
-        [-0.8, 0, 0.8]
-    ])
+    #iterate through each image in a set
+    for file in files:
+        fitem = os.path.join(inputPar, file)
+        img = cv2.imread(fitem)
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    blurred = cv2.GaussianBlur(gray, (7, 7), 2)
-    kernel_image = cv2.filter2D(blurred, -1, kernel)
-    image_filtered = kernel_image
+        #initialise convolution kernal for vertical lines
+        kernel = np.array([
+            [-0.8, 0, 0.8],
+            [-1.5, 0, 1.5],
+            [-0.8, 0, 0.8]
+        ])
 
-    upper_limit = 255
-    lower_limit = 70
+        #apply gaussian blur and kernal
+        blurred = cv2.GaussianBlur(gray, (7, 7), 2)
+        kernel_image = cv2.filter2D(blurred, -1, kernel)
+        image_filtered = kernel_image
 
-    ret, thresh1 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_BINARY)
-    edges = thresh1
+        upper_limit = 255
+        lower_limit = 70
 
-    # This returns an array of r and theta values
-    lines = cv2.HoughLinesP(
-            edges, # Input edge image
-            1, # Distance resolution in pixels
-            np.pi/180, # Angle resolution in radians
-            threshold=100, # Min number of votes for valid line
-            minLineLength=5, # Min allowed length of line
-            maxLineGap=10 # Max allowed gap between line for joining them
-            )
- 
-    # Iterate over points
-    try:
-        lines_list =[]
-        for points in lines:
-            # Extracted points nested in the list
-            x1,y1,x2,y2=points[0]
-            # Draw the lines joing the points
-            # On the original image
-            cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
-            # Maintain a simples lookup list for points
-            lines_list.append([(x1,y1),(x2,y2)])
-    except TypeError:
-        # No lines exist
-        pass
+        #apply threshold to filtered image
+        ret, thresh1 = cv2.threshold(image_filtered, lower_limit, upper_limit, cv2.THRESH_BINARY)
+        edges = thresh1
 
-    weld_image, weld_indices = find_weld_gap(70, img, img)
-    weld_location, weld_valid = check_validity(weld_indices, last_gap_position)
-    if weld_location != -1:
-        # Updates position of last gap if the last location was valid
-        last_gap_position = weld_location
+        # This returns an array of r and theta values to get the lines
+        lines = cv2.HoughLinesP(
+                edges, # Input edge image
+                1, # Distance resolution in pixels
+                np.pi/180, # Angle resolution in radians
+                threshold=100, # Min number of votes for valid line
+                minLineLength=5, # Min allowed length of line
+                maxLineGap=10 # Max allowed gap between line for joining them
+                )
 
-    #Add image, final index and validity of answer to array
-    weld_positions.append([file, weld_location, weld_valid])
+        # Draw the lines
+        try:
+            lines_list =[]
+            for points in lines:
+                # Extracted points nested in the list
+                x1,y1,x2,y2=points[0]
+                # Draw the lines joing the points
+                # On the original image
+                cv2.line(img,(x1,y1),(x2,y2),(0,255,0),2)
+                # Maintain a simples lookup list for points
+                lines_list.append([(x1,y1),(x2,y2)])
+        except TypeError:
+            # No lines exist
+            continue
 
-    # Saves requested images
-    save_image(file, img, 0, last_gap_position)
-    save_image(file, kernel_image, 1, last_gap_position)
-    save_image(file, thresh1, 2, last_gap_position)
-    # Shows image if uncommented
-    # cv2.imshow('test', print_image)
-    # cv2.waitKey(0)
-    
+        #find the size of the weld gap and check its validity
+        weld_image, weld_indices = find_weld_gap(70, img, img)
+        weld_location, weld_valid = check_validity(weld_indices, last_gap_position)
+        if weld_location != -1:
+            # Updates position of last gap if the last location was valid
+            last_gap_position = weld_location
+
+        #Add image, final index and validity of answer to array
+        weld_positions.append([file, weld_location, weld_valid])
+
+        # print_image = cv2.resize(img, (1400, 540), interpolation = cv2.INTER_AREA)
+
+        # Saves requested images
+        save_image(file, img, 0, last_gap_position)
+        save_image(file, kernel_image, 1, last_gap_position)
+        save_image(file, thresh1, 2, last_gap_position)
+        # Shows image if uncommented
+        # cv2.imshow('test', print_image)
+        # cv2.waitKey(0)
+        
 #Output all results to csv file
 with open('WeldGapPositions.csv', 'w', newline='') as f:
         writer = csv.writer(f)
