@@ -72,8 +72,8 @@ def crop_image(image, gap_position):
 path = os.getcwd()
 
 # Define input and output directories
-inputPar = os.path.join(path, 'image_datasets/Set 3/')
-outPar = os.path.join(path, 'output_images/')
+inputPar = os.path.join(path, 'image_datasets/Set 1/')
+outPar = os.path.join(path, 'InterimResults/')
 
 os.makedirs(outPar, exist_ok=True)
 
@@ -130,7 +130,7 @@ for file in files:
             lines_list.append([(x1,y1),(x2,y2)])
     except TypeError:
         # No lines exist
-        continue
+        pass
 
     weld_image, weld_indices = find_weld_gap(70, img, img)
     weld_location, weld_valid = check_validity(weld_indices, last_gap_position)
@@ -141,15 +141,13 @@ for file in files:
     #Add image, final index and validity of answer to array
     weld_positions.append([file, weld_location, weld_valid])
 
-    print_image = cv2.resize(img, (1400, 540), interpolation = cv2.INTER_AREA)
-
     # Saves requested images
     save_image(file, img, 0, last_gap_position)
     save_image(file, kernel_image, 1, last_gap_position)
     save_image(file, thresh1, 2, last_gap_position)
     # Shows image if uncommented
-    cv2.imshow('test', print_image)
-    cv2.waitKey(0)
+    # cv2.imshow('test', print_image)
+    # cv2.waitKey(0)
     
 #Output all results to csv file
 with open('WeldGapPositions.csv', 'w', newline='') as f:
